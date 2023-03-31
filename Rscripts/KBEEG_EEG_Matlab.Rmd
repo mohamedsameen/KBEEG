@@ -1,0 +1,1057 @@
+---
+title: "KBEEG_EEG_Matlab"
+author: "MAmeen"
+date: "09/06/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r load packages, include = FALSE, message = FALSE}
+library("plyr")
+library("lattice")
+library("ggplot2")
+library("dplyr")
+library("readr")
+library("rmarkdown")
+library("Rmisc")
+library("devtools")
+library("gghalves")
+library("ggsignif")
+library("ggpubr")
+library("DT")
+library("cowplot")
+library("readr")
+library("nparLD")
+library("reshape")
+library("rstatix")
+library("dplyr")
+library("knitr")
+library("kableExtra")
+library("nparLD")
+library("reshape")
+library("ggsignif")
+library("tidyverse")
+library("coin")
+library("GLMMadaptive")
+library("emmeans")
+library("multcomp")
+library("pscl")
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library("lme4")
+library("reactable")
+library("kableExtra")
+library("bibtex")
+library("psych")
+```
+
+# REG vs INV - Oscillations
+## Theta
+```{r THETA STATS AND PLOT,include = TRUE, echo = FALSE, message = FALSE, fig.align="center", fig.width=6, fig.height=5}
+ 
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/Osc/RvI_theta_All_X.txt", header=T, sep=",", row.names=NULL)
+dataT = c(data$pre ,data$post)
+dataALL_T = data.frame(dataT,G,time,ID, KB)
+attach(dataALL_T)
+theta <- f1.ld.f2(y=dataT, time1=time, time1.name="time" ,time2=KB, time2.name="Keyboard", group=G, subject=ID,description=TRUE)
+theta$ANOVA.test
+
+KB_R = dataALL_T[(dataALL_T$KB == 1),]
+mean(KB_R$dataT)
+KB_I = dataALL_T[(dataALL_T$KB == 2),]
+mean(KB_I$dataT)
+
+R1T1 = dataALL_T[(dataALL_T$KB == 1) & (dataALL_T$time == 1),]
+R1T2 = dataALL_T[(dataALL_T$KB == 1) & (dataALL_T$time == 2),]
+I1T1 = dataALL_T[(dataALL_T$KB == 2) & (dataALL_T$time == 1),]
+I2T2 = dataALL_T[(dataALL_T$KB == 2) & (dataALL_T$time == 2),]
+
+ph1 = nparLD(c(R1T1$dataT, R1T2$dataT) ~ rep(c("Pre","Post"),each = 33), subject = rep(1:33,2),description = F)
+
+ph2 = nparLD(c(I1T1$dataT, I2T2$dataT) ~ rep(c("Pre","Post"),each = 33), subject = rep(1:33,2), description = F)
+
+HSA = p.adjust( c(ph2$ANOVA.test$`p-value`, ph1$ANOVA.test$`p-value`), method = "bonf", n=2)
+
+WR1 = dataALL_T[(dataALL_T$KB == 1) & (dataALL_T$time == 1) & (dataALL_T$G == 1),]
+WR2 = dataALL_T[(dataALL_T$KB == 1) & (dataALL_T$time == 2) & (dataALL_T$G == 1),]
+WI1 = dataALL_T[(dataALL_T$KB == 2) & (dataALL_T$time == 1) & (dataALL_T$G == 1),]
+WI2 = dataALL_T[(dataALL_T$KB == 2) & (dataALL_T$time == 2) & (dataALL_T$G == 1),]
+SR1 = dataALL_T[(dataALL_T$KB == 1) & (dataALL_T$time == 1) & (dataALL_T$G == 2),]
+SR2 = dataALL_T[(dataALL_T$KB == 1) & (dataALL_T$time == 2) & (dataALL_T$G == 2),]
+SI1 = dataALL_T[(dataALL_T$KB == 2) & (dataALL_T$time == 1) & (dataALL_T$G == 2),]
+SI2 = dataALL_T[(dataALL_T$KB == 2) & (dataALL_T$time == 2) & (dataALL_T$G == 2),]
+
+Theta_diff = SI2$dataT - SI1$dataT
+Theta_diffW = WI2$dataT - WI1$dataT
+
+ ph1 <- nparLD(c(WR1$dataT, WR2$dataT)~rep(c("Pre","Post"), each=17), subject=rep(1:17,2), description=F)
+ph1$ANOVA.test$Statistic
+  ph2 <- nparLD(c(WI1$dataT, WI2$dataT)~rep(c("Pre","Post"), each=17), subject=rep(1:17,2), description=F)
+ph2$ANOVA.test$Statistic
+ ph3 <- nparLD(c(SR1$dataT, SR2$dataT)~rep(c("Pre","Post"), each=16), subject=rep(1:16,2), description=F)
+ph3$ANOVA.test$Statistic  
+  ph4 <- nparLD(c(SI1$dataT, SI2$dataT)~rep(c("Pre","Post"), each=16), subject=rep(1:16,2), description=F)
+ph4$ANOVA.test$Statistic
+
+
+HsA <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`,ph3$ANOVA.test$`p-value`  ,ph4$ANOVA.test$`p-value`), method = "bonf" , n = 4)
+
+FinalMat = dataALL_T
+FinalMat$xj <- jitter(FinalMat$KB, amount = 0.05)
+
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==1 & FinalMat$time==1] = 1
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==1 & FinalMat$time==2] = 2
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==2 & FinalMat$time==1] = 3
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==2 & FinalMat$time==2] = 4
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==1 & FinalMat$time==1] = 5
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==1 & FinalMat$time==2] = 6
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==2 & FinalMat$time==1] = 7
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==2 & FinalMat$time==2] = 8
+dc <- summarySE(FinalMat, measurevar="dataT", groupvars="KB2")
+dc1=dc
+
+cols <- c("Wake"="red","Sleep" = "dodgerblue")
+
+f1 <- ggplot(data=FinalMat, aes(y=dataT)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="1", time=="1"), aes(x=xj), color = 'red',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="1", time=="2"), aes(x=xj+1), color = 'red', size = 5,
+              alpha = .6) +
+   
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="2", time=="1"), aes(x=xj+1, y=dataT), color = 'red',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="2", time=="2"), aes(x=xj+2, y=dataT), color = 'red', size = 5,
+              alpha = .6) +
+  
+     geom_point(data = FinalMat %>% filter(G=="2",KB=="1", time=="1"), aes(x=xj+5, y=dataT), color = "dodgerblue",  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="1", time=="2"), aes(x=xj+6, y=dataT), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="2", time=="1"), aes(x=xj+6, y=dataT), color = 'dodgerblue',  size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="2", time=="2"), aes(x=xj+7, y=dataT), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+
+   geom_crossbar(data=dc1,aes(x=c( 1,2,3,4,6,7,8,9),ymin=dataT, ymax=dataT,y=dataT,group=KB2), width = 0.65, size=0.75, 
+                 col=c("red","red","red","red","dodgerblue","dodgerblue","dodgerblue","dodgerblue"))+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2,3,4,6,7,8,9), labels=c("R1","R2","I3","I4","R1","R2","I3","I4"), limits=c(0.6, 9.4)) +
+   ylab("spectral power (uv2)") + xlab("condition") + 
+   ggtitle('Theta (4-8Hz)') + 
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/FIG2/Osc/KBEEG_RvI_THETA_ALL.svg", width=8, height=8, dpi=500)
+```
+
+## Correlations
+```{r trying corrlations}
+
+dataBH <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Perf_gain_all.txt", header=F, sep=",", row.names=NULL)
+perf_gain = as.numeric(dataBH$V1[SG])  
+
+shapiro.test(Theta_diff)
+
+my_data = data.frame(perf_gain, Theta_diff)
+
+ggscatter(my_data, x = "perf_gain", y = "Theta_diff", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = c("pearson"),
+          xlab = "Slope diff", ylab = "Performamce gain")+
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+
+```
+
+
+## Alpha
+```{r Alpha REG and INV, include = TRUE, echo = FALSE, message = FALSE, fig.align="center", fig.width=6, fig.height=5 }
+# ALPHA
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/Osc/RvI_alpha_all_X.txt", header=T, sep=",", row.names=NULL)
+dataA = c(data$pre ,data$post)
+dataALL = data.frame(dataA,G,time,ID, KB)
+attach(dataALL)
+alpha <- f1.ld.f2(y=dataA, time1=time, time1.name="time" ,time2=KB, time2.name="Keyboard", group=G, subject=ID,description=TRUE)
+alpha$ANOVA.test
+
+# Keyborad X Time interaction
+R1 = dataALL[(dataALL$KB == 1) & (dataALL$time == 1),]
+mean(R1$dataA)
+R2 = dataALL[(dataALL$KB == 1) & (dataALL$time == 2),]
+mean(R2$dataA)
+I1 = dataALL[(dataALL$KB == 2) & (dataALL$time == 1),]
+I2 = dataALL[(dataALL$KB == 2) & (dataALL$time == 2),]
+mean(I2$dataA)
+mean(I1$dataA)
+
+  ph1 <- nparLD(c(R1$dataA, R2$dataA)~rep(c("Pre","Post"), each=33), subject=rep(1:33,2), description=F)
+ph1$ANOVA.test$`p-value`
+  ph2 <- nparLD(c(I1$dataA, I2$dataA)~rep(c("Pre","Post"), each=33), subject=rep(1:33,2), description=F)
+ph2$ANOVA.test$`p-value`
+Hs1 <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`), method = "bonf" , n = 2)
+
+R1T1 = dataALL[(dataALL$KB == 1) & (dataALL$time == 1),]
+R1T2 = dataALL[(dataALL$KB == 1) & (dataALL$time == 2),]
+I1T1 = dataALL[(dataALL$KB == 2) & (dataALL$time == 1),]
+I2T2 = dataALL[(dataALL$KB == 2) & (dataALL$time == 2),]
+
+ph1 = nparLD(c(R1T1$dataA, R1T2$dataA) ~ rep(c("Pre","Post"),each = 33), subject = rep(1:33,2),description = F)
+
+ph2 = nparLD(c(I1T1$dataA, I2T2$dataA) ~ rep(c("Pre","Post"),each = 33), subject = rep(1:33,2), description = F)
+
+HSA = p.adjust( c(ph2$ANOVA.test$`p-value`, ph1$ANOVA.test$`p-value`), method = "bonf", n=2)
+
+# Keyboard X GROUP X Time interaction
+WR1 = dataALL[(dataALL$KB == 1) & (dataALL$time == 1) & (dataALL$G == 1),]
+WR2 = dataALL[(dataALL$KB == 1) & (dataALL$time == 2) & (dataALL$G == 1),]
+WI1 = dataALL[(dataALL$KB == 2) & (dataALL$time == 1) & (dataALL$G == 1),]
+WI2 = dataALL[(dataALL$KB == 2) & (dataALL$time == 2) & (dataALL$G == 1),]
+SR1 = dataALL[(dataALL$KB == 1) & (dataALL$time == 1) & (dataALL$G == 2),]
+SR2 = dataALL[(dataALL$KB == 1) & (dataALL$time == 2) & (dataALL$G == 2),]
+SI1 = dataALL[(dataALL$KB == 2) & (dataALL$time == 1) & (dataALL$G == 2),]
+SI2 = dataALL[(dataALL$KB == 2) & (dataALL$time == 2) & (dataALL$G == 2),]
+
+ ph1 <- nparLD(c(WR1$dataA, WR2$dataA)~rep(c("Pre","Post"), each=17), subject=rep(1:17,2), description=F)
+ph1$ANOVA.test$`p-value`
+  ph2 <- nparLD(c(WI1$dataA, WI2$dataA)~rep(c("Pre","Post"), each=17), subject=rep(1:17,2), description=F)
+ph2$ANOVA.test$`p-value`
+ ph3 <- nparLD(c(SR1$dataA, SR2$dataA)~rep(c("Pre","Post"), each=16), subject=rep(1:16,2), description=F)
+ph3$ANOVA.test$`p-value`
+  ph4 <- nparLD(c(SI1$dataA, SI2$dataA)~rep(c("Pre","Post"), each=16), subject=rep(1:16,2), description=F)
+ph4$ANOVA.test$`p-value`
+HsA <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`), method = "bonf" , n = 2)
+
+FinalMat = dataALL
+FinalMat$xj <- jitter(FinalMat$KB, amount = 0.05)
+
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==1 & FinalMat$time==1] = 1
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==1 & FinalMat$time==2] = 2
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==2 & FinalMat$time==1] = 3
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==2 & FinalMat$time==2] = 4
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==1 & FinalMat$time==1] = 5
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==1 & FinalMat$time==2] = 6
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==2 & FinalMat$time==1] = 7
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==2 & FinalMat$time==2] = 8
+dc <- summarySE(FinalMat, measurevar="dataA", groupvars="KB2")
+dc1=dc
+
+
+cols <- c("Wake"="red","Sleep" = "dodgerblue")
+
+f1 <- ggplot(data=FinalMat, aes(y=dataA)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="1", time=="1"), aes(x=xj), color = 'red',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="1", time=="2"), aes(x=xj+1), color = 'red', size = 5,
+              alpha = .6) +
+   
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="2", time=="1"), aes(x=xj+1), color = 'red',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="2", time=="2"), aes(x=xj+2), color = 'red', size = 5,
+              alpha = .6) +
+  
+     geom_point(data = FinalMat %>% filter(G=="2",KB=="1", time=="1"), aes(x=xj+5), color = "dodgerblue",  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="1", time=="2"), aes(x=xj+6), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="2", time=="1"), aes(x=xj+6), color = 'dodgerblue',  size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="2", time=="2"), aes(x=xj+7), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+
+   geom_crossbar(data=dc1,aes(x=c( 1,2,3,4,6,7,8,9),ymin=dataA, ymax=dataA,y=dataA,group=KB2), width = 0.65, size=0.75, 
+                 col=c("red","red","red","red","dodgerblue","dodgerblue","dodgerblue","dodgerblue"))+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2,3,4,6,7,8,9), labels=c("R1","R2","I3","I4","R1","R2","I3","I4"), limits=c(0.6, 9.4)) +
+   ylab("spectral power (uv2)") + xlab("condition") + 
+   ggtitle('Alpha (8-12Hz)') + 
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/FIG3/KBEEG_RvI_alpha_All_F.svg", width=8, height=8, dpi=500)
+
+```
+
+
+## Beta
+```{r BETA, include = TRUE, echo = FALSE, message = FALSE, fig.align="center", fig.width=6, fig.height=5 }
+# BETA
+AG <- c(1:10, 22, 23,24,25,31,32,33) 
+SG <- c(11:21, 26,27,28,29,30 ) 
+
+Gs = rep(2,32) 
+Gw = rep(1,34) 
+G      = rep(c(Gs,Gw),2) 
+ID     = rep(c(rep(1:16,2), rep(17:33,2)),2) 
+time   = rep(c(1,2),each=66) 
+KB     = rep(c(rep(1:2,each=16), rep(1:2,each=17)),2)
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/RvI_beta_C_X.txt", header=T, sep=",", row.names=NULL)
+dataB = c(data$pre ,data$post)
+dataALL = data.frame(dataB,G,time,ID, KB)
+attach(dataALL)
+beta <- f1.ld.f2(y=dataB, time1=time, time1.name="time" ,time2=KB, time2.name="Keyboard", group=G, subject=ID,description=TRUE)
+beta$ANOVA.test
+
+#KEYBOARD EFFECT
+KB_R = dataALL[(dataALL$KB == 1),]
+mean(KB_R$dataB)
+KB_I = dataALL[(dataALL$KB == 2),]
+mean(KB_I$dataB)
+
+# Time GROUP INTERACTION
+Ss1 = dataALL[(dataALL$G == 2) & (dataALL$time == 1),]
+mean(Ss1$dataB)
+Ss2 = dataALL[(dataALL$G == 2) & (dataALL$time == 2),]
+mean(Ss2$dataB)
+Sw1 = dataALL[(dataALL$G == 1) & (dataALL$time == 1),]
+mean(Sw1$dataB)
+Sw2 = dataALL[(dataALL$G == 1) & (dataALL$time == 2),]
+mean(Sw2$dataB)
+
+ph1 <- nparLD(c(Ss1$dataB, Ss2$dataB)~rep(c("Pre","Post"), each=32), subject=rep(1:32,2), description=F)
+ph1$ANOVA.test$Statistic
+ph2 <- nparLD(c(Sw1$dataB, Sw2$dataB)~rep(c("Pre","Post"), each=34), subject=rep(1:34,2), description=F)
+ph2$ANOVA.test$Statistic
+HsB <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`), method = "bonf" , n = 2)
+
+SI1 = dataALL[(dataALL$G == 2) & (dataALL$time == 1) & (dataALL$KB == 2),]
+mean(Ss1$dataB)
+SI2 = dataALL[(dataALL$G == 2) & (dataALL$time == 2) & (dataALL$KB == 2),]
+mean(Ss2$dataB)
+beta_diff = SI2$dataB - SI1$dataB
+
+WI1 = dataALL[(dataALL$G == 1) & (dataALL$time == 1) & (dataALL$KB == 2),]
+mean(Ss1$dataB)
+WI2 = dataALL[(dataALL$G == 1) & (dataALL$time == 2) & (dataALL$KB == 2),]
+mean(Ss2$dataB)
+beta_diffW = WI2$dataB - WI1$dataB
+
+WR1 = dataALL[(dataALL$KB == 1) & (dataALL$time == 1) & (dataALL$G == 1),]
+WR2 = dataALL[(dataALL$KB == 1) & (dataALL$time == 2) & (dataALL$G == 1),]
+WI1 = dataALL[(dataALL$KB == 2) & (dataALL$time == 1) & (dataALL$G == 1),]
+WI2 = dataALL[(dataALL$KB == 2) & (dataALL$time == 2) & (dataALL$G == 1),]
+SR1 = dataALL[(dataALL$KB == 1) & (dataALL$time == 1) & (dataALL$G == 2),]
+SR2 = dataALL[(dataALL$KB == 1) & (dataALL$time == 2) & (dataALL$G == 2),]
+SI1 = dataALL[(dataALL$KB == 2) & (dataALL$time == 1) & (dataALL$G == 2),]
+SI2 = dataALL[(dataALL$KB == 2) & (dataALL$time == 2) & (dataALL$G == 2),]
+
+
+ ph1 <- nparLD(c(WR1$dataB, WR2$dataB)~rep(c("Pre","Post"), each=17), subject=rep(1:17,2), description=F)
+ph1$ANOVA.test$Statistic
+  ph2 <- nparLD(c(WI1$dataB, WI2$dataB)~rep(c("Pre","Post"), each=17), subject=rep(1:17,2), description=F)
+ph2$ANOVA.test$Statistic
+ ph3 <- nparLD(c(SR1$dataB, SR2$dataB)~rep(c("Pre","Post"), each=16), subject=rep(1:16,2), description=F)
+ph3$ANOVA.test$Statistic
+  ph4 <- nparLD(c(SI1$dataB, SI2$dataB)~rep(c("Pre","Post"), each=16), subject=rep(1:16,2), description=F)
+ph4$ANOVA.test$Statistic
+
+HsB4 <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`,ph3$ANOVA.test$`p-value`,ph4$ANOVA.test$`p-value`), method = "bonf" , n = 4)
+
+perf_gain = as.numeric(dataBH$V1[SG])
+my_data <- data.frame(beta_diff, perf_gain)
+
+shapiro.test(my_data$beta_diff)
+ggscatter(my_data, x = "beta_diff", y = "perf_gain", 
+          add = "reg.line", conf.int = TRUE, size = 5,
+          cor.coef = TRUE, cor.method = c("pearson"),
+          xlab = "Beta Power diff", ylab = "Performamce gain")+
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"), axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/FIG4/Corr_perf_beta.svg", width=8, height=8, dpi=500)
+
+FinalMat = dataALL
+FinalMat$xj <- jitter(FinalMat$KB, amount = 0.05)
+
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==1 & FinalMat$time==1] = 1
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==1 & FinalMat$time==2] = 2
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==2 & FinalMat$time==1] = 3
+FinalMat$KB2[FinalMat$KB==1 & FinalMat$G==2 & FinalMat$time==2] = 4
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==1 & FinalMat$time==1] = 5
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==1 & FinalMat$time==2] = 6
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==2 & FinalMat$time==1] = 7
+FinalMat$KB2[FinalMat$KB==2 & FinalMat$G==2 & FinalMat$time==2] = 8
+
+dc2 = describe(dataB~KB2,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE)) #column 3 is mean row 5 is median
+dc1 = dc
+dc1[3,]=dc[5,]
+dc1[4,]=dc[6,]
+dc1[5,]=dc[3,]
+dc1[6,]=dc[4,]
+
+cols <- c("Wake"="red","Sleep" = "dodgerblue")
+
+f1 <- ggplot(data=FinalMat, aes(y=dataB)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="1", time=="1"), aes(x=xj), color = 'red',  size = 5.,alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="1", time=="2"), aes(x=xj+1), color = 'red', size = 5,alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="2", time=="1"), aes(x=xj+1), color = 'red',  size = 5.,alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="2", time=="2"), aes(x=xj+2), color = 'red', size = 5, alpha = .6) +
+  
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="1", time=="1"), aes(x=xj+5), color = "dodgerblue",  size = 5., alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="1", time=="2"), aes(x=xj+6), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="2", time=="1"), aes(x=xj+6), color = 'dodgerblue',  size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="2", time=="2"), aes(x=xj+7), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+
+   geom_crossbar(data=dc1,aes(x=c( 1,2,3,4,6,7,8,9),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, 
+                 col=c("red","red","red","red","dodgerblue","dodgerblue","dodgerblue","dodgerblue"))+
+ 
+   geom_signif(stat="identity", data=data.frame(x=6, xend=9,y=0.038, annotation="**"),
+      aes(x=x,xend=xend, y=y, yend=y, annotation=annotation, textsize=7), size = 5, color = "black")+
+
+
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2,3,4,6,7,8,9), labels=c("R1","R2","I3","I4","R1","R2","I3","I4"), limits=c(0.6, 9.4)) +
+   ylab("beta power (uv2)") + xlab("session") + 
+   ggtitle('Beta (13-30Hz)') + 
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figure_panels/KBEEG_RvI_beta_ALL_X.svg", width=8, height=8, dpi=500)
+
+```
+
+
+
+# Spectral Slope (1 - 45 Hz)
+```{r Fractal INV and REG, include = TRUE, echo = FALSE, message = FALSE, fig.align="center", fig.width=6, fig.height=5 }
+AG <- c(1:10, 22, 23,24,25,31,32,33)
+SG <- c(11:21, 26,27,28,29,30 )
+
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/RvI_Slope145_All_X.txt", header=T, sep=",", row.names=NULL)
+
+  dataFr = c(data$R1,data$R2,data$I3,data$I4)
+G1     = rep(1,33)
+G1[SG] = 2
+G      = rep(G1,4)
+ID     = rep(c(1:33),4 )
+time   = rep(c(1,2,1,2),each=33)
+KB     = rep(c(1,2),each = 66)
+
+
+dataALL_F = data.frame(dataFr,G,time,ID, KB)
+
+attach(dataALL_F)
+SS <- f1.ld.f2(y=dataFr, time1=time, time1.name="time" ,time2=KB, time2.name="Keyboard", group=G, subject=ID,description=TRUE)
+SS$ANOVA.test
+
+ST1 = dataALL_F[(dataALL_F$G == 2) & (dataALL_F$time == 1),]
+ST2 = dataALL_F[(dataALL_F$G == 2) & (dataALL_F$time == 2),]
+WT1 = dataALL_F[(dataALL_F$G == 1) & (dataALL_F$time == 1),]
+WT2 = dataALL_F[(dataALL_F$G == 1) & (dataALL_F$time == 2),]
+
+ph = nparLD(c(ST1$dataFr, ST2$dataFr)~rep(c("Pre","Post"), each = 32), subject = rep(1:32,2), description = F)
+
+ph2 = nparLD(c(WT1$dataFr, WT2$dataFr)~rep(c("Pre","Post"),each = 34), subject = rep(1:34,2), description = F)
+
+p.adjust(c(ph$ANOVA.test$`p-value`, ph2$ANOVA.test$`p-value`), method = "bonf", n =2)
+sp_exp = data$I4[SG] - data$I3[SG]
+
+dataBH <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Perf_gain_all.txt", header=F, sep=",", row.names=NULL)
+
+perf_gain = as.numeric(dataBH$V1[SG])  
+my_data <- data.frame(sp_exp,  perf_gain)
+
+shapiro.test(beta_diff)
+
+ggscatter(my_data, x = "sp_exp", y = "perf_gain", 
+          add = "reg.line", conf.int = TRUE, size = 5,
+          cor.coef = TRUE, cor.method = c("pearson"),
+          xlab = "slope difference (I4 - I3)", ylab = "performance change (I4 - I3)")+
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/FIGURES_CB/Fig4/Corr_Slope_Perf_All.svg", width=8, height=8, dpi=500)
+ 
+perf_gainW = as.numeric(dataBH$V1[AG])  
+sp_expW = data$I4[AG] - data$I3[AG]
+my_dataW <- data.frame(sp_expW, perf_gainW)
+
+ggscatter(my_dataW, x = "sp_expW", y = "perf_gainW", 
+          add = "reg.line", conf.int = TRUE, size = 5,
+          cor.coef = TRUE, cor.method = c("kendall"),
+          xlab = "Slope diff", ylab = "Performamce gain")+
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/SFig3-2/Corr_Slope_Perf_W.svg", width=8, height=8, dpi=500)
+ 
+# BETA SPECTRALSLOPE CORR
+ sp_exp = data$I4[SG] - data$I3[SG]
+ beta_diff = SI2$dataB - SI1$dataB
+
+my_data <- data.frame(beta_diff, sp_exp)
+
+ggscatter(my_data, x = "beta_diff", y = "sp_exp", 
+          add = "reg.line", conf.int = TRUE, size = 5,
+          cor.coef = TRUE, cor.method = c("pearson"),
+          xlab = "Beta difference", ylab = "Slope change")+
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/SFig3-2/Corr_perf_beta_All.svg", width=8, height=8, dpi=500)
+
+
+ # BETA SPECTRALSLOPE CORR W
+ sp_expW = data$I4[AG] - data$I3[AG]
+ beta_diffW = WI2$dataB - WI1$dataB
+ 
+
+my_dataW <- data.frame(sp_expW, beta_diffW)
+
+ggscatter(my_dataW, x = "sp_expW", y = "perf    ", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = c("kendall"),
+          xlab = "Slope diff", ylab = "Beta_diff")+
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/SFig3-2/Corr_Slope_beta_W.svg", width=8, height=8, dpi=500)
+
+attach(dataALL_F)
+Slopes <- f1.ld.f2(y=dataFr, time1=time, time1.name="time" ,time2=KB, time2.name="Keyboard", group=G, subject=ID,description=TRUE)
+Slopes$ANOVA.test
+
+mean(c(data$I3,data$I4))
+mean(c(data$R1,data$R2))
+```
+
+```{r PLot Slope}
+FinalMat = dataALL_F
+FinalMat$xj <- jitter(FinalMat$KB, amount = 0.05)
+FinalMat$KB2 <- rep(c(1,2,3,4),each =33)
+
+FinalMat$KB2[FinalMat$KB2==4 & FinalMat$G==2] = FinalMat$KB2[FinalMat$KB2==4& FinalMat$G==2]+4
+FinalMat$KB2[FinalMat$KB2==2 & FinalMat$G==2] = FinalMat$KB2[FinalMat$KB2==2& FinalMat$G==2]+4
+FinalMat$KB2[FinalMat$KB2==1 & FinalMat$G==2] = FinalMat$KB2[FinalMat$KB2==1& FinalMat$G==2]+4
+FinalMat$KB2[FinalMat$KB2==3 & FinalMat$G==2] = FinalMat$KB2[FinalMat$KB2==3& FinalMat$G==2]+4
+dc2 = describe(dataFr~KB2,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE)) #column 3 is mean row 5 is median
+dc1 = dc
+dc1[3,]=dc[5,]
+dc1[4,]=dc[6,]
+dc1[5,]=dc[3,]
+dc1[6,]=dc[4,]
+
+
+cols <- c("Wake"="red","Sleep" = "dodgerblue")
+
+
+f1 <- ggplot(data=FinalMat, aes(y=dataFr)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="1", time=="1"), aes(x=xj), color = 'red',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="1", time=="2"), aes(x=xj+1), color = 'red', size = 5,
+              alpha = .6) +
+   
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="2", time=="1"), aes(x=xj+1, y=dataFr), color = 'red',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="1",KB=="2", time=="2"), aes(x=xj+2, y=dataFr), color = 'red', size = 5,
+              alpha = .6) +
+  
+     geom_point(data = FinalMat %>% filter(G=="2",KB=="1", time=="1"), aes(x=xj+5, y=dataFr), color = "dodgerblue",  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="1", time=="2"), aes(x=xj+6, y=dataFr), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="2", time=="1"), aes(x=xj+6, y=dataFr), color = 'dodgerblue',  size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(G=="2",KB=="2", time=="2"), aes(x=xj+7, y=dataFr), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+
+   geom_crossbar(data=dc1,aes(x=c( 1,2,3,4,6,7,8,9),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, 
+                 col=c("red","red","red","red","dodgerblue","dodgerblue","dodgerblue","dodgerblue"))+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2,3,4,6,7,8,9), labels=c("R1","R2","I3","I4","R1","R2","I3","I4"), limits=c(0.6, 9.4)) +
+   ylab("spectral slope") + xlab("condition") + 
+   ggtitle('Spectral Slope') + ylim(-2.5 , 0.7)+
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/FIG2/Osc/RvI_Slope_All.svg", width=8, height=8, dpi=500)
+```
+
+
+
+
+
+# Spectral slope and oscillations decode
+```{r }
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/RvI_Slope145_decode.txt", header=T, sep=",", row.names=NULL)
+dataSD = c(data$pre,data$post)
+G1     = c(rep(2,16), rep(1,17))
+G      = rep(G1,2)
+ID     = rep(c(1:33),2 )
+time   = rep(c(1,2),each=33)
+C      = rep(c(1,2),each=33)
+
+
+dataALL_SD = data.frame(dataSD,G,time,ID,C)
+
+attach(dataALL_SD)
+SS <- f1.ld.f1(y=dataSD, time=time, time.name="time" , group=G, subject=ID,description=TRUE)
+SS$ANOVA.test
+
+Ss1 = dataALL_SD[(dataALL_SD$G == 2) & (dataALL_SD$time == 1),]
+mean(Ss1$dataSD)
+Ss2 = dataALL_SD[(dataALL_SD$G == 2) & (dataALL_SD$time == 2),]
+mean(Ss2$dataSD)
+Sw1 = dataALL_SD[(dataALL_SD$G == 1) & (dataALL_SD$time == 1),]
+mean(Sw1$dataSD)
+Sw2 = dataALL_SD[(dataALL_SD$G == 1) & (dataALL_SD$time == 2),]
+mean(Sw2$dataSD)
+
+ph1 <- nparLD(c(Ss1$dataSD, Ss2$dataSD)~rep(c("Pre","Post"), each=16), subject=rep(1:16,2), description=F)
+ph1$ANOVA.test$`p-value`
+ph2 <- nparLD(c(Sw1$dataSD, Sw2$dataSD)~rep(c("Pre","Post"), each=17), subject=rep(1:17,2), description=F)
+ph2$ANOVA.test$`p-value`
+HsB <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`), method = "bonf" , n = 2)
+
+######
+AG <- c(1:10, 22, 23,24,25,31,32,33)
+SG <- c(11:21, 26,27,28,29,30 )
+
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/RvI_Slope145_decode.txt", header=T, sep=",", row.names=NULL)
+data2 <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/RvI_Beta_decode.txt", header=T, sep=",", row.names=NULL)
+
+dataSD = c(data$pre,data$post,data2$pre,data2$post)
+G1     = c(rep(2,16), rep(1,17))
+G      = rep(G1,4)
+ID     = rep(c(1:33),4 )
+time   = rep(c(1,2,1,2),each=33)
+C      = rep(c(1,2),each=66)
+
+
+dataALL_SD = data.frame(dataSD,G,time,ID,C)
+
+attach(dataALL_SD)
+SS <- f1.ld.f2(y=dataSD, time1=time, time1.name="time" ,time2 = C, time2.name = "periodicity", group=G, subject=ID,description=TRUE)
+SS$ANOVA.test
+
+
+# group X time ineteraction
+Ss1 = dataALL_SD[(dataALL_SD$G == 2) & (dataALL_SD$time == 1),]
+mean(Ss1$dataSD)
+Ss2 = dataALL_SD[(dataALL_SD$G == 2) & (dataALL_SD$time == 2),]
+mean(Ss2$dataSD)
+Sw1 = dataALL_SD[(dataALL_SD$G == 1) & (dataALL_SD$time == 1),]
+mean(Sw1$dataSD)
+Sw2 = dataALL_SD[(dataALL_SD$G == 1) & (dataALL_SD$time == 2),]
+mean(Sw2$dataSD)
+
+ph1 <- nparLD(c(Ss1$dataSD, Ss2$dataSD)~rep(c("Pre","Post"), each=32), subject=rep(1:32,2), description=F)
+ph1$ANOVA.test$`p-value`
+ph2 <- nparLD(c(Sw1$dataSD, Sw2$dataSD)~rep(c("Pre","Post"), each=34), subject=rep(1:34,2), description=F)
+ph2$ANOVA.test$`p-value`
+HsB <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`), method = "bonf" , n = 2)
+
+# group X periodicity
+Ss1 = dataALL_SD[(dataALL_SD$G == 2) & (dataALL_SD$C == 1),]
+mean(Ss1$dataSD)
+Ss2 = dataALL_SD[(dataALL_SD$G == 2) & (dataALL_SD$C == 2),]
+mean(Ss2$dataSD)
+Sw1 = dataALL_SD[(dataALL_SD$G == 1) & (dataALL_SD$C == 1),]
+mean(Sw1$dataSD)
+Sw2 = dataALL_SD[(dataALL_SD$G == 1) & (dataALL_SD$C == 2),]
+mean(Sw2$dataSD)
+
+ph1 <- nparLD(c(Ss1$dataSD, Ss2$dataSD)~rep(c("Pre","Post"), each=32), subject=rep(1:32,2), description=F)
+ph1$ANOVA.test$`p-value`
+ph2 <- nparLD(c(Sw1$dataSD, Sw2$dataSD)~rep(c("Pre","Post"), each=34), subject=rep(1:34,2), description=F)
+ph2$ANOVA.test$`p-value`
+HsB <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`), method = "bonf" , n = 2)
+
+
+```
+
+## Plotting slope and oscillations decoding
+```{r }
+
+FinalMat = dataALL_SD
+FinalMat$C2 <- rep(0,each =132)
+
+FinalMat$C2[FinalMat$G==1 & FinalMat$time==1 & FinalMat$C==1] = 1
+FinalMat$C2[FinalMat$G==1 & FinalMat$time==2 & FinalMat$C==1] = 2
+
+FinalMat$C2[FinalMat$G==2 & FinalMat$time==1 & FinalMat$C==1] = 3
+FinalMat$C2[FinalMat$G==2 & FinalMat$time==2 & FinalMat$C==1] = 4
+
+FinalMat$C2[FinalMat$G==1 & FinalMat$time==1 & FinalMat$C==2] = 5
+FinalMat$C2[FinalMat$G==1 & FinalMat$time==2 & FinalMat$C==2] = 6
+
+FinalMat$C2[FinalMat$G==2 & FinalMat$time==1 & FinalMat$C==2] = 7
+FinalMat$C2[FinalMat$G==2 & FinalMat$time==2 & FinalMat$C==2] = 8
+
+FinalMat$xj <- jitter(FinalMat$C2, amount = 0.05)
+
+dc2 = describe(dataSD~C2,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE)) #column 3 is mean row 5 is median
+
+
+
+
+cols <- c("Wake"="red","Sleep" = "dodgerblue")
+
+
+f1 <- ggplot(data=FinalMat, aes(y=dataSD)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(C2==1), aes(x=xj), color = 'red',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(C2==2), aes(x=xj), color = 'red', size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(C2==3), aes(x=xj), color = 'dodgerblue',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(C2==4), aes(x=xj), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+  
+   geom_point(data = FinalMat %>% filter(C2==5), aes(x=xj+1), color = "red",  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(C2==6), aes(x=xj+1), color = 'red', size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(C2==7), aes(x=xj+1), color = 'dodgerblue',  size = 5,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(C2==8), aes(x=xj+1), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+
+   geom_crossbar(data=dc,aes(x=c( 1,2,3,4,6,7,8,9),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, 
+                 col=c("red","red","dodgerblue","dodgerblue","red","red","dodgerblue","dodgerblue"))+
+  
+   geom_signif(stat="identity", data=data.frame(x=2.5, xend=7.5, y=0.085, annotation="**"),
+      aes(x=x,xend=xend, y=y, yend=y, annotation=annotation, textsize=14), size = 4, color = "black")+
+  
+   geom_hline(yintercept=0.5, linetype='dotted')+
+       
+    annotate(geom="text", x = 2.5, y = 1.2, label =bquote('spectral slope'), size =10)+
+     annotate(geom="text", x = 7.5, y = 1.2, label =bquote('Beta power'), size =10)+
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2,3,4,6,7,8,9), labels=c("pre","post","pre","post","pre","post","pre","post"), limits=c(0.6, 9.4)) +
+   ylab("auc") + xlab("condition") + 
+   ggtitle('Decoding REG vs INV') + ylim(0.4 , 1.2)+
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/FIGURES_CB/Fig4/DecodeRvI_Slope_Beta.svg", width=8, height=8, dpi=500)
+
+```
+# Difference in beta bursts in Tonic REM
+```{r stat}
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/2022/FINAL-AUG/txt_files/Bursts_allE_NEME-NEMA.txt", header=T, sep=",", row.names=NULL)
+
+dataBH <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Perf_gain_all.txt", header=F, sep=",", row.names=NULL)
+
+perf_gain = as.numeric(dataBH$V1[SG])  
+my_data <- data.frame(data, perf_gain)
+
+
+ggscatter(my_data, x = "Var1", y = "perf_gain", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = c("kendall"),
+          xlab = "Diff in Beta bursts in tREM (Exp-Adap)", ylab = "Performamce gain")+
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/2022/FINAL-AUG/Bursts/Corr-Bursts-BH-tREM(EXP-ADP).svg", width=8, height=8, dpi=500)
+
+```
+# REM BETA No Eye movements
+```{r NEMS BETA}
+
+ID     = rep(c(rep(1:16,2)))
+EM     = rep(1:2,each=16)
+
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/txt_matlab/BBA_NEMs.txt", header=T, sep=",", row.names=NULL)
+
+dataREM = c(data$A,data$E)
+REMS = data.frame(dataREM,EM,ID)
+
+ph1 <- nparLD(dataREM~EM, subject=ID, description=F, data = REMS)
+ph1$ANOVA.test$`p-value`
+
+
+FinalMat = REMS
+FinalMat$xj <- jitter(FinalMat$EM, amount = 0.05)
+dc2 = describe(dataREM~EM,data=REMS) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE))
+dc1 =dc
+
+f1 <- ggplot(data=FinalMat, aes(y=dataREM)) +
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(EM=="1"), aes(x=xj), color = 'indianred3',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(EM=="2"), aes(x=xj), color = 'springgreen4', size = 5,
+              alpha = .6) +
+
+   geom_crossbar(data=dc1,aes(x=c( 1,2),ymin=X5, ymax=X5,y=X5,group=X1), width = 0.65, size=0.75, 
+                 col=c("indianred3", "springgreen4"))+
+   
+    geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+    geom_signif(stat="identity", data=data.frame(x=1, xend=2,y=0.09, annotation="*"),
+      aes(x=x,xend=xend, y=y, yend=y, annotation=annotation, textsize=10), size = 4, color = "black")+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2), labels=c("Adapt","Exp"), limits=c(0.6, 2.4)) +
+   ylab("spectral power (uv2)") + xlab("night") + 
+   ggtitle('Beta oscillations during tonic REM periods') + ylim(-0.01 , 0.1)+
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/2022/June/KBEEG_Sleep_Beta_NEMs.svg", width=8, height=8, dpi=500)
+
+sp_exp = data$E = data$A
+
+dataBH <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Perf_gain_all.txt", header=F, sep=",", row.names=NULL)
+
+perf_gain = as.numeric(dataBH$V1[SG])  
+my_data <- data.frame(sp_exp, beta_diff)
+
+
+ggscatter(my_data, x = "sp_exp", y = "beta_diff", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = c("kendall"),
+          xlab = "Beta power diff", ylab = "Performamce gain")+
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/2022/June/Corr_betaREM_betaI.svg", width=8, height=8, dpi=500)
+
+
+my_data <- data.frame(sp_exp, perf_gain)
+
+ggscatter(my_data, x = "sp_exp", y = "perf_gain", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = c("kendall"),
+          xlab = "Slope diff", ylab = "Performamce gain")+
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/2022/June/Corr_betaREM_Perf.svg", width=8, height=8, dpi=500)
+```
+
+```{r Generalize}
+
+SW     = c(rep(1,16),rep(2,17))
+ID     = 1:33
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/Diff_Gen.txt", header=T, sep=",", row.names=NULL)
+
+REMS = data.frame(data,SW,ID)
+
+ph1 <- nparLD(SthenW~SW, subject = ID, description=F, data = REMS)
+ph1$ANOVA.test$`p-value`
+
+```
+
+
+# Beta bursts I
+```{r Beta Bursts}
+
+IDS   = rep(c(rep(1:16,2)))
+IDW   = rep(c(rep(17:33,2)))
+ID    = c(IDS,IDW)
+G     = c(rep(1,32), rep(2,34))
+Time  = c(rep(1:2,each=16),rep(1:2,each=17))
+
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Bursts_Beta_13-30_C3C4_Ratio.txt", header=T, sep=",", row.names=NULL)
+
+Bursts = data.frame(t(data),G,Time,ID)
+
+attach(Bursts)
+BBA <- f1.ld.f1(y=t.data., time=Time , group=G, subject=ID,description=TRUE)
+BBA$ANOVA.test
+
+ph1 = nparLD(Bursts$t.data.[1:32]~rep(c("Pre","Post"), each=16), subject=rep(1:16,2), description=F) 
+ph1$ANOVA.test$`p-value`
+
+ph2 = nparLD(Bursts$t.data.[33:66]~rep(c("Pre","Post"), each=17), subject=rep(1:17,2), description=F) 
+ph2$ANOVA.test$`p-value`
+
+Hs1 <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`), method = "bonf" , n = 2)
+
+FinalMat = Bursts
+FinalMat$Time2 = c(rep(c(1,2),each=16),rep(c(3,4),each=17))
+FinalMat$xj <- jitter(FinalMat$Time2, amount = 0.05)
+dc2 = describe(t.data.~Time2,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE))
+dc1 =dc
+
+f1 <- ggplot(data=FinalMat, aes(y=t.data.)) +
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(Time2=="1"), aes(x=xj), color = 'dodgerblue',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Time2=="2"), aes(x=xj), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+  
+     geom_point(data = FinalMat %>% filter(Time2=="3"), aes(x=xj), color = 'red',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Time2=="4"), aes(x=xj), color = 'red', size = 5,
+              alpha = .6) +
+
+   geom_crossbar(data=dc1,aes(x=c( 1,2,3,4),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, 
+                 col=c("dodgerblue","dodgerblue","red","red"))+
+   
+    geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+    geom_signif(stat="identity", data=data.frame(x=3, xend=4,y=0.085, annotation="*"),
+      aes(x=x,xend=xend, y=y, yend=y, annotation=annotation, textsize=14), size = 4, color = "black")+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1.5,3.5), labels=c("Sleep","Wake"), limits=c(0.6, 4.4)) +
+   ylab("n bursts /n epochs") + ylim(0,0.1)+
+   ggtitle('Central Beta Bursts') +
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/2022/FINAL-AUG/Bursts/I3-I4_Bursting.svg", width=8, height=8, dpi=500)
+
+```
+
+#amplitude of Beta Bursts
+```{r} 
+IDS   = rep(c(rep(1:16,2)))
+IDW   = rep(c(rep(17:33,2)))
+ID    = c(IDS,IDW)
+G     = c(rep(1,32), rep(2,34))
+Time  = c(rep(1:2,each=16),rep(1:2,each=17))
+
+#data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Bursts_Beta_13-30_C3C4_amp.txt", header=T, sep=",", row.names=NULL) #amplitude of Sessions
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/2022/FINAL-AUG/txt_files/Bursts_Beta_desync_C3C4_Amp_1.5s.txt", header=T, sep=",", row.names=NULL) #amplitude of rebounds
+#data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Bursts_Beta_desync_C3C4_amp.txt", header=T, sep=",", row.names=NULL) #amplitude of rebounds
+
+Bursts = data.frame(t(data),G,Time,ID)
+
+attach(Bursts)
+BBA <- f1.ld.f1(y=t.data., time=Time , group=G, subject=ID,description=TRUE)
+BBA$ANOVA.test
+
+
+  ph1 <- nparLD(Bursts$t.data.[1:32]~rep(c("Pre","Post"), each=16), subject=rep(1:16,2), description=F)
+ph1$ANOVA.test$`p-value`
+ph2 <- nparLD(Bursts$t.data.[33:66]~rep(c("Pre","Post"), each=17), subject=rep(1:17,2), description=F)
+ph2$ANOVA.test$`p-value`
+HsB <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`), method = "bonf" , n = 2)
+
+```
+
+```{r }
+
+FinalMat = Bursts
+FinalMat$Time2 = c(rep(c(1,2),each=16),rep(c(3,4),each=17))
+FinalMat$xj <- jitter(FinalMat$Time2, amount = 0.05)
+dc2 = describe(t.data.~Time2,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE))
+dc1 =dc
+
+f1 <- ggplot(data=FinalMat, aes(y=t.data.)) +
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(Time2=="1"), aes(x=xj), color = 'dodgerblue',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Time2=="2"), aes(x=xj), color = 'dodgerblue', size = 5,
+              alpha = .6) +
+  
+     geom_point(data = FinalMat %>% filter(Time2=="3"), aes(x=xj), color = 'red',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Time2=="4"), aes(x=xj), color = 'red', size = 5,
+              alpha = .6) +
+
+   geom_crossbar(data=dc1,aes(x=c( 1,2,3,4),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, 
+                 col=c("dodgerblue","dodgerblue","red","red"))+
+   
+    geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+  geom_signif(stat="identity", data=data.frame(x=1, xend=2,y=10, annotation="*"),
+      aes(x=x,xend=xend, y=y, yend=y, annotation=annotation, textsize=14), size = 4, color = "black")+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1.5,3.5), labels=c("Sleep","Wake"), limits=c(0.6, 4.4)) +
+   ylab("n bursts / n epochs") + xlab("group") + 
+   ggtitle('Beta Bursts - Desync') +
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/2022/FINAL-AUG/Bursts/Central_Burst_rebound_Desync1.5.svg", width=8, height=8, dpi=500)
+
+
+
+
+```
+# RSA
+
+```{r RSA}
+
+ID   = rep(c(rep(1:32,4)))
+
+ 
+C     = rep(c(1,2),each=64)
+G     = rep(c(rep(1,16), rep(2,16)),4)
+t     = rep(c(rep(1,32),rep(2,32)),2)
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Toolboxes/RSA_WS16.txt", header=T, sep=",", row.names=NULL)
+
+dataRSA = c(data$w_pre,data$w_pos,data$b_pre,data$b_pos)
+
+RSA = data.frame(dataRSA,G,t,C,ID)
+
+attach(RSA)
+BBA <- f1.ld.f2(y=dataRSA, time1=t ,time1.name = "Time",time2=C, time2.name = "Condition",group=G, subject=ID,description=TRUE)
+BBA$ANOVA.test
+
+ID2 = rep(c(rep(1:32,2)))
+C2  = rep(c(rep(1:2,each=32)))
+
+ph= nparLD(c(data$w_pre , data$w_pos)~ C2, subject = ID2, description=F )
+ph$ANOVA.test$`p-value`
+
+ph2= nparLD(c(data$b_pre , data$b_pos)~ C2, subject = ID2, description=F )
+ph2$ANOVA.test$`p-value`
+```

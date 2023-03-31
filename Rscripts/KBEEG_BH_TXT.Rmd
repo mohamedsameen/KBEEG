@@ -1,0 +1,501 @@
+---
+title: "KBEEG_BR_ALL"
+author: "MAmeen"
+date: "25/03/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r load packages, include = FALSE, message = FALSE}
+library("plyr")
+library("lattice")
+library("ggplot2")
+library("dplyr")
+library("readr")
+library("rmarkdown")
+library("Rmisc")
+library("devtools")
+library("gghalves")
+library("ggsignif")
+library("ggpubr")
+library("DT")
+library("cowplot")
+library("readr")
+library("nparLD")
+library("reshape")
+library("rstatix")
+library("dplyr")
+library("knitr")
+library("kableExtra")
+library("nparLD")
+library("reshape")
+library("ggsignif")
+library("tidyverse")
+library("coin")
+library("GLMMadaptive")
+library("emmeans")
+library("multcomp")
+library("pscl")
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library("lme4")
+library("reactable")
+library("kableExtra")
+library("bibtex")
+```
+
+# The WORD level analysis
+```{r load dataframes}
+prf_I1 <- matrix(NA, nrow = 300, ncol = 33)
+prf_I2 <- matrix(NA, nrow = 300, ncol = 33)
+prf_I3 <- matrix(NA, nrow = 300, ncol = 33)
+prf_I4 <- matrix(NA, nrow = 300, ncol = 33)
+prf_I5 <- matrix(NA, nrow = 300, ncol = 33)
+prf_I6 <- matrix(NA, nrow = 300, ncol = 33)
+prf_I7 <- matrix(NA, nrow = 300, ncol = 33)
+
+for (i in c(1:33)){
+  if (i < 10)
+  {folder <- sprintf("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/BehavioralData/VP0%d/", i)}
+  else
+  {folder <- sprintf("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/BehavioralData/VP%d/", i)}
+
+  filelist = list.files(path = folder, pattern = ".*.txt")
+  
+  data <- read.delim(  paste(folder, filelist[1], sep= ""), header=T, row.names=NULL, fill = TRUE)
+  acc = data$LETTERS_CORRECT_BY_WORD /5
+  spd = data$TYPING_TIME_WORD / 1000  # typing time in setime
+  prf = acc/spd
+  prf_I1[1:length(prf),i] = prf
+  
+  rm(prf,acc,spd)
+  
+  data <- read.delim(  paste(folder, filelist[2], sep= ""), header=T, row.names=NULL, fill = TRUE)
+  acc = data$LETTERS_CORRECT_BY_WORD /5
+  spd = data$TYPING_TIME_WORD / 1000  # typing time in second
+  prf = acc/spd
+  prf_I2[1:length(prf),i] = prf
+  rm(prf,acc,spd)
+
+  data <- read.delim(  paste(folder, filelist[3], sep= ""), header=T, row.names=NULL, fill = TRUE)
+  acc = data$LETTERS_CORRECT_BY_WORD /5
+  spd = data$TYPING_TIME_WORD / 1000  # typing time in second
+  prf = acc/spd
+  prf_I3[1:length(prf),i] = prf
+  rm(prf,acc,spd)
+  
+  data <- read.delim(  paste(folder, filelist[4], sep= ""), header=T, row.names=NULL, fill = TRUE)
+  acc = data$LETTERS_CORRECT_BY_WORD /5
+  spd = data$TYPING_TIME_WORD / 1000  # typing time in second
+  prf = acc/spd
+  prf_I4[1:length(prf),i] = prf
+  rm(prf,acc,spd)
+  
+  data <- read.delim(  paste(folder, filelist[5], sep= ""), header=T, row.names=NULL, fill = TRUE)
+  acc = data$LETTERS_CORRECT_BY_WORD /5
+  spd = data$TYPING_TIME_WORD / 1000  # typing time in second
+  prf = acc/spd
+  prf_I5[1:length(prf),i] = prf
+  rm(prf,acc,spd)
+
+  
+    data <- read.delim(  paste(folder, filelist[6], sep= ""), header=T, row.names=NULL, fill = TRUE)
+  acc = data$LETTERS_CORRECT_BY_WORD /5
+  spd = data$TYPING_TIME_WORD / 1000  # typing time in second
+  prf = acc/spd
+  prf_I6[1:length(prf),i] = prf
+  rm(prf,acc,spd)
+
+  data <- read.delim(  paste(folder, filelist[7], sep= ""), header=T, row.names=NULL, fill = TRUE)
+  acc = data$LETTERS_CORRECT_BY_WORD /5
+  spd = data$TYPING_TIME_WORD / 1000  # typing time in second
+  prf = acc/spd
+  prf_I7[1:length(prf),i] = prf
+  rm(prf,acc,spd)
+}
+
+```
+# STATS
+```{r stats time-resolved curves}
+AG <- c(1:10, 22, 23,24,25,31,32,33)
+SG <- c(11:21, 26,27,28,29,30 )
+
+I1_summary = vector ()
+I3_summary = vector ()
+I2_summary = vector ()
+I4_summary = vector ()
+I5_summary = vector ()
+R1_summary = vector ()
+R2_summary = vector ()
+
+for (i in c(1:300)){
+I1_summary[i] <- mean(prf_I1[i,])
+I2_summary[i] <- mean(prf_I2[i,])
+I3_summary[i] <- mean(prf_I3[i,])
+I4_summary[i] <- mean(prf_I4[i,])
+I5_summary[i] <- mean(prf_I5[i,])
+R1_summary[i] <- mean(prf_I6[i,])
+R2_summary[i] <- mean(prf_I7[i,])
+}
+
+I1_sum <- apply(prf_I1,2,summary)
+I2_sum <- apply(prf_I1,2,summary)
+I3_sum <- apply(prf_I3,2,summary)
+I4_sum <- apply(prf_I4,2,summary)
+I5_sum <- apply(prf_I5,2,summary)
+R1_sum <- apply(prf_I6,2,summary)
+R2_sum <- apply(prf_I7,2,summary)
+
+I3_sum2 <- as.data.frame(t(I3_sum))
+
+I4_sum2 <- as.data.frame(t(I4_sum))
+
+R1_sum2 <- as.data.frame(t(R1_sum))
+
+R2_sum2 <- as.data.frame(t(R2_sum))
+
+
+Y      = c(I3_sum2$Mean,I4_sum2$Mean,R1_sum2$Mean,R2_sum2$Mean)
+G1     = rep(1,33)
+G1[SG] = 2
+G      = rep(G1,4)
+ID     = rep(c(1:33),4 )
+time   = rep(c(1,2,1,2),each=33)
+KB     = rep(c(1,2),each = 66)
+
+dataMat = data.frame(Y,G,ID,time,KB)
+
+attach(dataMat)
+stats<-f1.ld.f2(y=Y, time1= time, time1.name = "Time" , time2 = KB, time2.name = "KB",group = G, subject=ID,  description=F)
+stats$ANOVA.test
+
+ph1 <- nparLD(c(I3_sum2$Mean[SG], I4_sum2$Mean[SG])~rep(c("Pre","Post"), each=16), subject=rep(1:16, 2), description=F)
+ph1$ANOVA.test$`p-value`
+
+ph2 <- nparLD(c(I3_sum2$Mean[AG], I4_sum2$Mean[AG])~rep(c("Pre","Post"), each=17), subject=rep(1:17, 2), description=F)
+ph2$ANOVA.test$`p-value`
+
+ph3 <- nparLD(c(R1_sum2$Mean[SG], R2_sum2$Mean[SG])~rep(c("Pre","Post"), each=16), subject=rep(1:16, 2), description=F)
+ph3$ANOVA.test$`p-value`
+
+ph4 <- nparLD(c(R1_sum2$Mean[AG], R2_sum2$Mean[AG])~rep(c("Pre","Post"), each=17), subject=rep(1:17, 2), description=F)
+ph4$ANOVA.test$`p-value`
+
+Hs1 <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`,ph3$ANOVA.test$`p-value`  ,ph4$ANOVA.test$`p-value`), method = "bonf" , n = 4)
+
+perf_gainS <- I4_sum2$Mean[SG]- I3_sum2$Mean[SG]
+fwrite(list(perf_gainS), file = "C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/PgainS.txt")
+
+perf_gainW <- I4_sum2$Mean[AG]- I3_sum2$Mean[AG]
+fwrite(list(perf_gainS), file = "C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/PgainW.txt")
+
+
+write.table(table(data.frame(perf_gain)), 'C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Pgain_I4I3.txt', dec = ".",
+            row.names = FALSE, col.names = FALSE)
+
+I5_sum2 <- as.data.frame(t(I5_sum))
+
+Y      = c(I5_sum2$Mean,I5_sum2$Mean)
+G1     = rep(1,33) 
+G1[SG] = 2
+G      = rep(G1,2)
+ID     = rep(c(1:33),2 )
+
+dataMat = data.frame(Y,G,ID)
+attach(dataMat)
+stats<-nparLD(y=Y, time1= time, time1.name = "Time" , time2 = KB, time2.name = "KB",group = G, subject=ID,  description=F)
+
+```
+# PLotting the word level analysis
+```{r plotting}
+
+dataMat$xj <- jitter(dataMat$time, amount=.1)
+
+S_W= rep(1,33)
+S_W[c(SG)] <- 2
+
+dataMat$levels <- c(S_W, 2+S_W, 4+S_W, 6+S_W)
+cols <- c("Wake"="red","Sleep" = "dodgerblue")
+dc <- summarySE(dataMat, measurevar="Y", groupvars="levels")
+cols <- c("Wake"="red","Sleep" = "dodgerblue")
+
+f1 <- ggplot(data=dataMat, aes(y=Y))+
+##   #Add geom_() objects
+   geom_point(data = dataMat %>% filter(KB=="2",time=="1",G=="1"), aes(x=xj, color = "Wake"), size = 5,
+              alpha = .6) +
+     geom_point(data = dataMat %>% filter(KB=="2",time=="2", G=="1"), aes(x=xj, color = "Wake"), size = 5,
+              alpha = .6) +
+
+   geom_point(data = dataMat %>% filter(KB=="2",time=="1",G=="2"), aes(x=xj+2, color = "Sleep"), size = 5,
+              alpha = .6) +
+     geom_point(data = dataMat %>% filter(KB=="2",time=="2", G=="2"), aes(x=xj+2, color = "Sleep"), size = 5,
+              alpha = .6) +
+
+   geom_point(data = dataMat %>% filter(KB=="1",time=="1",G=="1"), aes(x=xj+4, color = "Wake"), size = 5,
+              alpha = .6) +
+     geom_point(data = dataMat %>% filter(KB=="1",time=="2", G=="1"), aes(x=xj+4, color = "Wake"), size = 5,
+              alpha = .6) +
+
+   geom_point(data = dataMat %>% filter(KB=="1",time=="1",G=="2"), aes(x=xj+6, color = "Sleep"), size = 5,
+              alpha = .6) +
+     geom_point(data = dataMat %>% filter(KB=="1",time=="2", G=="2"), aes(x=xj+6, color = "Sleep"), size = 5,
+              alpha = .6) +
+  
+    geom_crossbar(data=dc,aes(x=c(5,6,7,8, 1,2,3,4),ymin=Y, ymax=Y,y=Y,group=levels), width = 0.6, size=0.9, col=c("red","red","dodgerblue","dodgerblue","red","red","dodgerblue","dodgerblue"))+
+  
+
+   guides(fill = guide_legend(title = "LEFT", title.position = "left"))+
+      scale_colour_manual(name = "Group", values=cols) +
+  
+     annotate(geom="text", x = 2.5, y = 1.5, label =bquote('REG'), size =10)+
+     annotate(geom="text", x = 6.5, y = 1.5, label =bquote('INV'), size =10)+
+  
+    geom_signif(stat="identity", data=data.frame(x=7, xend=8,y=0.9, annotation="p < 0.001"),
+      aes(x=x,xend=xend, y=y, yend=y, annotation=annotation, textsize=7), size = 2.5, color = "dodgerblue")+
+
+      #Define additional settings
+   scale_x_continuous(breaks=c(1,2,3,4,5,6,7,8), labels=c("B", "A", "B", "A","B", "A","B", "A")) +
+   xlab("time") + ylab("performance") +  ylim(0.1 , 1.7)+
+   theme_classic() + theme(axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=32, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=20), legend.text=element_text(size=26), legend.title = 
+  element_blank()) 
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Results/Final/Behavioral.svg", width=8, height=8, dpi=500)
+```
+
+# Different Lists in the regular typing
+```{r REG - List}
+L1 =  c("r a m p e", "a n k e r", "m a r k e", "k a m e l", "p a l m e", "l a k e n")
+L2 =  c("a m p e l", "m a l e r", "l a m p e", "n e p a l", "r a n k e", "p l a n e")
+L3 =  c("s u c h t", "s t i c h", "t i s c h", "d i s c o", "s i c h t", "f u c h s")
+
+prf_R1L1 <- matrix(NA, nrow = 300, ncol = 33)
+prf_R1L2 <- matrix(NA, nrow = 300, ncol = 33)
+prf_R1L3 <- matrix(NA, nrow = 300, ncol = 33)
+prf_R2L1 <- matrix(NA, nrow = 300, ncol = 33)
+prf_R2L2 <- matrix(NA, nrow = 300, ncol = 33)
+prf_R2L3 <- matrix(NA, nrow = 300, ncol = 33)
+
+for (i in c(1:33)){
+  if (i < 10)
+  {folder <- sprintf("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/BehavioralData/VP0%d/", i)}
+  else
+  {folder <- sprintf("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/BehavioralData/VP%d/", i)}
+
+  filelist = list.files(path = folder, pattern = ".*.txt")
+ 
+  data <- read.delim(  paste(folder, filelist[6], sep= ""), header=T, row.names=NULL, fill = TRUE)
+  
+  l1 <- which(is.element(data$word, L1))
+  l2 <- which(is.element(data$word, L2))
+  l3 <- which(is.element(data$word, L3))
+  
+  dataL1 = data[l1,]
+  acc1 = dataL1$LETTERS_CORRECT_BY_WORD /5
+  spd1 = dataL1$TYPING_TIME_WORD / 1000  # typing time in second
+  prf1 = acc1/spd1
+  prf_R1L1[1:length(prf1),i] = prf1
+  rm(prf1,acc1,spd1) 
+  
+  dataL2 = data[l2,]
+  acc2 = dataL2$LETTERS_CORRECT_BY_WORD /5
+  spd2 = dataL2$TYPING_TIME_WORD / 1000  # typing time in second
+  prf2 = acc2/spd2
+  prf_R1L2[1:length(prf2),i] = prf2
+  rm(prf2,acc2,spd2) 
+  
+  dataL3 = data[l3,]
+  acc3 = dataL3$LETTERS_CORRECT_BY_WORD /5
+  spd3 = dataL3$TYPING_TIME_WORD / 1000  # typing time in second
+  prf3 = acc3/spd3
+  prf_R1L3[1:length(prf3),i] = prf3
+  rm(prf3,acc3,spd3) 
+  
+  rm(data, dataL1, dataL2, dataL3)
+  data <- read.delim(  paste(folder, filelist[7], sep= ""), header=T, row.names=NULL, fill = TRUE)
+  
+  l1 <- which(is.element(data$word, L1))
+  l2 <- which(is.element(data$word, L2))
+  l3 <- which(is.element(data$word, L3))
+  
+  dataL1 = data[l1,]
+  acc1 = dataL1$LETTERS_CORRECT_BY_WORD /5
+  spd1 = dataL1$TYPING_TIME_WORD / 1000  # typing time in second
+  prf1 = acc1/spd1
+  prf_R2L1[1:length(prf1),i] = prf1
+  rm(prf1,acc1,spd1) 
+  
+  dataL2 = data[l2,]
+  acc2 = dataL2$LETTERS_CORRECT_BY_WORD /5
+  spd2 = dataL2$TYPING_TIME_WORD / 1000  # typing time in second
+  prf2 = acc2/spd2
+  prf_R2L2[1:length(prf2),i] = prf2
+  rm(prf2,acc2,spd2) 
+  
+  dataL3 = data[l3,]
+  acc3 = dataL3$LETTERS_CORRECT_BY_WORD /5
+  spd3 = dataL3$TYPING_TIME_WORD / 1000  # typing time in second
+  prf3 = acc3/spd3
+  prf_R2L3[1:length(prf3),i] = prf3
+  rm(prf3,acc3,spd3) 
+}
+```
+  
+
+# Stats of regular typing List
+```{r REG List Stats}
+
+AG <- c(1:10, 22, 23,24,25,31,32,33)
+SG <- c(11:21, 26,27,28,29,30 )
+
+R1L1_summary = vector ()
+R1L2_summary = vector ()
+R1L3_summary = vector ()
+R2L1_summary = vector ()
+R2L2_summary = vector ()
+R2L3_summary = vector ()
+
+for (i in c(1:300)){
+R1L1_summary[i] <- mean(prf_R1L1[i,])
+R1L2_summary[i] <- mean(prf_R1L2[i,])
+R1L3_summary[i] <- mean(prf_R1L3[i,])
+R2L1_summary[i] <- mean(prf_R2L1[i,])
+R2L2_summary[i] <- mean(prf_R2L2[i,])
+R2L3_summary[i] <- mean(prf_R2L3[i,])
+}
+
+R1L1_sum <- apply(prf_R1L1[1:6,],2,summary)
+R1L2_sum <- apply(prf_R1L2[1:6,],2,summary)
+R1L3_sum <- apply(prf_R1L3[1:6,],2,summary)
+R2L1_sum <- apply(prf_R2L1[1:6,],2,summary)
+R2L2_sum <- apply(prf_R2L2[1:6,],2,summary)
+R2L3_sum <- apply(prf_R2L3[1:6,],2,summary)
+
+R1L1_sum2 <- as.data.frame(t(R1L1_sum))
+R1L2_sum2 <- as.data.frame(t(R1L2_sum))
+R1L3_sum2 <- as.data.frame(t(R1L3_sum))
+R2L1_sum2 <- as.data.frame(t(R2L1_sum))
+R2L2_sum2 <- as.data.frame(t(R2L2_sum))
+R2L3_sum2 <- as.data.frame(t(R2L3_sum))
+
+Y      = c(R1L1_sum2$Mean,R1L2_sum2$Mean,R1L3_sum2$Mean,R2L1_sum2$Mean,R2L2_sum2$Mean,R2L3_sum2$Mean)
+G1     = rep(1,33)
+G1[SG] = 2
+G      = rep(G1,6)
+ID     = rep(c(1:33),6 )
+time   = rep(c(1,2),each=99)
+List   = rep(c(1,2,3,1,2,3),each = 33)
+
+dataMat = data.frame(Y,G,ID,time,List)
+
+attach(dataMat)
+stats<-f1.ld.f2(y=Y, time1= time, time1.name = "Time" , time2 = List, time2.name = "List",group = G, subject=ID,  description=F)
+stats$ANOVA.test
+
+ph1 <- nparLD(c(R1L1_sum2$Mean[SG], R2L1_sum2$Mean[SG])~rep(c("Pre","Post"), each=16), subject=rep(1:16, 2), description=F)
+ph1$ANOVA.test$`p-value`
+
+ph2 <- nparLD(c(R1L1_sum2$Mean[AG], R2L1_sum2$Mean[AG])~rep(c("Pre","Post"), each=17), subject=rep(1:17, 2), description=F)
+ph2$ANOVA.test$`p-value`
+
+ph3 <- nparLD(c(R1L2_sum2$Mean[SG], R2L2_sum2$Mean[SG])~rep(c("Pre","Post"), each=16), subject=rep(1:16, 2), description=F)
+ph3$ANOVA.test$`p-value`
+
+ph4 <- nparLD(c(R1L2_sum2$Mean[AG], R2L2_sum2$Mean[AG])~rep(c("Pre","Post"), each=17), subject=rep(1:17, 2), description=F)
+ph4$ANOVA.test$`p-value`
+
+ph5 <- nparLD(c(R1L3_sum2$Mean[SG], R2L3_sum2$Mean[SG])~rep(c("Pre","Post"), each=16), subject=rep(1:16, 2), description=F)
+ph5$ANOVA.test$`p-value`
+
+ph6 <- nparLD(c(R1L3_sum2$Mean[AG], R2L3_sum2$Mean[AG])~rep(c("Pre","Post"), each=17), subject=rep(1:17, 2), description=F)
+ph6$ANOVA.test$`p-value`
+
+Hs1 <- p.adjust(c(ph1$ANOVA.test$`p-value`  ,ph2$ANOVA.test$`p-value`,ph3$ANOVA.test$`p-value`  ,ph4$ANOVA.test$`p-value`, ph5$ANOVA.test$`p-value`, ph6$ANOVA.test$`p-value`), method = "bonf" , n = 6)
+
+```
+
+# PLotting REG LISTS
+```{r plotting REG List first 6}
+dataMat$xj <- jitter(dataMat$List, amount=.1)
+
+S_W= rep(1,33)
+S_W[c(SG)] <- 2
+
+dataMat$levels <- c(S_W, 2+S_W, 4+S_W, 6+S_W,8+S_W, 10+S_W)
+dc2 = describe(Y~levels,data=dataMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE)) #column 3 is mean row 5 is median
+dc1 = dc
+dc1[2,]=dc[7,]
+dc1[3,]=dc[2,]
+dc1[4,]=dc[8,]
+dc1[5,]=dc[3,]
+dc1[6,]=dc[9,]
+dc1[7,]=dc[4,]
+dc1[8,]=dc[10,]
+dc1[9,]=dc[5,]
+dc1[10,]=dc[11,]
+dc1[11,]=dc[6,]
+dc1[12,]=dc[12,]
+
+cols <- c("Wake"="red","Sleep" = "dodgerblue")
+f1 <- ggplot(data=dataMat, aes(y=Y)) +
+#####  
+##   #Add geom_() objects
+  geom_point(data = dataMat %>% filter(time=="1",List=="1",G=="1"), aes(x=xj), color = "red" , size = 5,
+              alpha = .6) +
+  geom_point(data = dataMat %>% filter(time=="2",List=="1",G=="1"), aes(x=xj+0.5), color = "red", size = 5,
+              alpha = .6) +
+  
+  geom_point(data = dataMat %>% filter(time=="1",List=="1", G=="2"), aes(x=xj+1), color = "dodgerblue", size = 5,
+              alpha = .6) +
+  geom_point(data = dataMat %>% filter(time=="2",List=="1", G=="2"), aes(x=xj+1.5), color = "dodgerblue", size = 5,
+              alpha = .6) +
+  
+  geom_point(data = dataMat %>% filter(time=="1",List=="2", G=="1"), aes(x=xj+1.5), color = "red", size = 5,
+              alpha = .6) +
+  geom_point(data = dataMat %>% filter(time=="2",List=="2", G=="1"), aes(x=xj+2), color = "red", size = 5,
+              alpha = .6) +
+  
+   geom_point(data = dataMat %>% filter(time=="1",List=="2",G=="2"), aes(x=xj+2.5), color = "dodgerblue", size = 5,
+              alpha = .6) +
+   geom_point(data = dataMat %>% filter(time=="2",List=="2",G=="2"), aes(x=xj+3), color = "dodgerblue", size = 5,
+              alpha = .6) +
+  
+     geom_point(data = dataMat %>% filter(time=="1",List=="3", G=="1"), aes(x=xj+3),color = "red", size = 5,
+              alpha = .6) +
+     geom_point(data = dataMat %>% filter(time=="2",List=="3", G=="1"), aes(x=xj+3.5), color = "red", size = 5,
+              alpha = .6) +
+  
+       geom_point(data = dataMat %>% filter(time=="1",List=="3", G=="2"), aes(x=xj+4), color = "dodgerblue", size = 5,
+              alpha = .6) +
+       geom_point(data = dataMat %>% filter(time=="2",List=="3", G=="2"), aes(x=xj+4.5), color = "dodgerblue", size = 5,
+              alpha = .6) +
+  
+    geom_crossbar(data=dc1,aes(x=c(1,1.5,2,2.5,3.5,4,4.5,5,6,6.5,7,7.5),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.5, size=0.8, col=rep(c("red","red","dodgerblue","dodgerblue"),3))+
+    
+  geom_signif(stat="identity", data=data.frame(x=2, xend=2.5,y=1.2, annotation="p = 0.034"),
+      aes(x=x,xend=xend, y=y, yend=y, annotation=annotation, textsize=7), size = 4, color = "dodgerblue")+
+    geom_signif(stat="identity", data=data.frame(x=7, xend=7.5,y=1.2, annotation="p = 0.007"),
+      aes(x=x,xend=xend, y=y, yend=y, annotation=annotation, textsize=7), size = 4, color = "dodgerblue")+
+
+      #Define additional settings
+ scale_x_continuous(breaks=c(2,4,6), labels=c("L1" ,"L2", "L3")) +
+   xlab("list") + ylab("performance") +  ylim(0. , 1.35)+
+   theme_classic() + theme(axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=32, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=20), legend.text=element_text(size=26), legend.title = 
+  element_blank()) 
+f1
+```
+
+  
+   
+   
+   
+   

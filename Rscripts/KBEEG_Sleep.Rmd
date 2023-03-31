@@ -1,0 +1,520 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r load packages, include = FALSE, message = FALSE}
+library("plyr")
+library("lattice")
+library("ggplot2")
+library("dplyr")
+library("readr")
+library("rmarkdown")
+library("Rmisc")
+library("devtools")
+library("gghalves")
+library("ggsignif")
+library("ggpubr")
+library("DT")
+library("cowplot")
+library("readr")
+library("nparLD")
+library("reshape")
+library("rstatix")
+library("dplyr")
+library("knitr")
+library("kableExtra")
+library("nparLD")
+library("reshape")
+library("ggsignif")
+library("tidyverse")
+library("coin")
+library("GLMMadaptive")
+library("emmeans")
+library("multcomp")
+library("pscl")
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library("lme4")
+library("reactable")
+library("kableExtra")
+library("bibtex")
+library("psych")
+```
+
+```{r Beta power REM P/T}
+# BETA
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/REMSleep_beta.txt", header=T, sep=",", row.names=NULL)
+
+dataR = c(data$R_A,data$R_E,data$N_A,data$N_E)
+
+ID     = rep(c(1:16),4)
+time   = rep(c(1,2,1,2),each=16)
+Eye     = rep(c(1,2),each = 32)
+dataALL_R = data.frame(dataR,time,ID, Eye)
+
+
+attach(dataALL_R)
+beta <- ld.f2(y=dataR, time1=time, time1.name="time" ,time2=Eye, time2.name="eye", subject=ID,description=TRUE)
+
+beta$ANOVA.test$Statistic
+beta$ANOVA.test$`p-value`
+```
+
+```{r PLot BETA}
+FinalMat = dataALL_R
+FinalMat$xj <- jitter(FinalMat$Eye, amount = 0.05)
+FinalMat$KB2 <- rep(c(1,2,3,4),each =16)
+
+FinalMat2 = FinalMat
+
+dc2 = describe(dataR~KB2,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE)) #column 3 is mean row 5 is median
+
+
+cols <- c("A"="darkorange2","E" = "darkorchid4")
+
+
+f1 <- ggplot(data=FinalMat, aes(y=dataR)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(Eye=="1", time=="1"), aes(x=xj), color = 'darkorange2',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Eye=="1", time=="2"), aes(x=xj+1), color = 'darkorchid4', size = 5,
+              alpha = .6) +
+   
+   geom_point(data = FinalMat %>% filter(Eye=="2", time=="1"), aes(x=xj+1.5), color = 'darkorange2',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Eye=="2", time=="2"), aes(x=xj+2.5), color = 'darkorchid4', size = 5,
+              alpha = .6) +
+  
+   geom_crossbar(data=dc,aes(x=c( 1,2,3.5,4.5),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, 
+                 col=c("darkorange2","darkorchid4","darkorange2","darkorchid4"))+
+  
+      annotate(geom="text", x = 1.5, y = 0.04, label =bquote('Phasic'), size =12)+
+     annotate(geom="text", x = 4, y = 0.04, label =bquote('Tonic'), size =12)+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2,3.5,4.5), labels=c("Adapt","Exp","Adapt","Exp"), limits=c(0.5, 5)) +
+   ylab("beta power (uv2)") + xlab("night") + ylim(0, 0.045)+
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/F4/Beta_PT.svg", width=8, height=8, dpi=500)
+```
+
+# Theta
+```{r }
+data2 <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/REMSleep_theta.txt", header=T, sep=",", row.names=NULL)
+
+dataR = c(data2$R_E,data2$R_A,data2$N_E,data2$N_A)
+
+ID     = rep(c(1:16),4)
+time   = rep(c(1,2,1,2),each=16)
+Eye     = rep(c(1,2),each = 32)
+dataALL_R = data.frame(dataR,time,ID, Eye)
+
+
+attach(dataALL_R)
+theta <- ld.f2(y=dataR, time1=time, time1.name="time" ,time2=Eye, time2.name="eye", subject=ID,description=TRUE)
+
+theta$ANOVA.test$`p-value`
+```
+
+```{r plot theta}
+FinalMat = dataALL_R
+FinalMat$xj <- jitter(FinalMat$Eye, amount = 0.05)
+FinalMat$KB2 <- rep(c(1,2,3,4),each =16)
+
+FinalMat2 = FinalMat
+
+dc2 = describe(dataR~KB2,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE)) #column 3 is mean row 5 is median
+
+
+cols <- c("A"="darkorange2","E" = "darkorchid4")
+
+
+f1 <- ggplot(data=FinalMat, aes(y=dataR)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(Eye=="1", time=="1"), aes(x=xj), color = 'darkorange2',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Eye=="1", time=="2"), aes(x=xj+1), color = 'darkorchid4', size = 5,
+              alpha = .6) +
+   
+   geom_point(data = FinalMat %>% filter(Eye=="2", time=="1"), aes(x=xj+1.5), color = 'darkorange2',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Eye=="2", time=="2"), aes(x=xj+2.5), color = 'darkorchid4', size = 5,
+              alpha = .6) +
+  
+   geom_crossbar(data=dc,aes(x=c( 1,2,3.5,4.5),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, 
+                 col=c("darkorange2","darkorchid4","darkorange2","darkorchid4"))+
+  
+      annotate(geom="text", x = 1.5, y = 0.37, label =bquote('Phasic'), size =12)+
+     annotate(geom="text", x = 4, y = 0.37, label =bquote('Tonic'), size =12)+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2,3.5,4.5), labels=c("Adapt","Exp","Adapt","Exp"), limits=c(0.5, 5)) +
+   ylab("theta power (uv2)") + xlab("night") + ylim(0, 0.4)+
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/F4/Theta_PT.svg", width=8, height=8, dpi=500)
+
+```
+
+
+#SLOPE
+```{r}
+dataS <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/Slope345_REM_all.txt", header=T, sep=",", row.names=NULL)
+
+dataSS = c(dataS$RE,dataS$RA,dataS$NE,dataS$NA.)
+
+ID     = rep(c(1:16),4)
+time   = rep(c(1,2,1,2),each=16)
+Eye     = rep(c(1,2),each = 32)
+dataALL_R = data.frame(dataSS,time,ID, Eye)
+
+
+attach(dataALL_R)
+beta <- ld.f2(y=dataR, time1=time, time1.name="time" ,time2=Eye, time2.name="eye", subject=ID,description=TRUE)
+beta$ANOVA.test$Statistic
+beta$ANOVA.test$`p-value`
+
+Theta_diff_R = data2$R_E - data2$R_A
+Theta_diff_N = data2$N_E - data2$N_A
+Beta_diff_R  = data$R_E - data$R_A
+Beta_diff_N  = data$N_E - data$N_A
+Slope_diff_N = dataS$NE - dataS$NA.
+Slope_diff_R = dataS$RE - dataS$RA
+
+# PERFORMANCE
+AG <- c(1:10, 22, 23,24,25,31,32,33) 
+SG <- c(11:21, 26,27,28,29,30 ) 
+dataBH <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Perf_gain_all.txt", header=F, sep=",", row.names=NULL)
+perf_gain = as.numeric(dataBH$V1[SG])  
+
+data_MRMc = data.frame(perf_gain,Theta_diff_R,Theta_diff_N, Beta_diff_R, Beta_diff_N, Slope_diff_N , Slope_diff_R)
+model <- lm(perf_gain ~ Beta_diff_R+Beta_diff_N+Slope_diff_R+Slope_diff_N, data = data_MRMc)
+summary(model)
+
+```
+
+```{r plot Slope}
+FinalMat = dataALL_R
+FinalMat$xj <- jitter(FinalMat$Eye, amount = 0.05)
+FinalMat$KB2 <- rep(c(1,2,3,4),each =16)
+
+FinalMat2 = FinalMat
+
+dc2 = describe(dataSS~KB2,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE)) #column 3 is mean row 5 is median
+
+
+cols <- c("A"="darkorange2","E" = "darkorchid4")
+
+
+f1 <- ggplot(data=FinalMat, aes(y=dataSS)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(Eye=="1", time=="1"), aes(x=xj), color = 'darkorange2',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Eye=="1", time=="2"), aes(x=xj+1), color = 'darkorchid4', size = 5,
+              alpha = .6) +
+   
+   geom_point(data = FinalMat %>% filter(Eye=="2", time=="1"), aes(x=xj+1.5), color = 'darkorange2',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Eye=="2", time=="2"), aes(x=xj+2.5), color = 'darkorchid4', size = 5,
+              alpha = .6) +
+  
+   geom_crossbar(data=dc,aes(x=c( 1,2,3.5,4.5),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, 
+                 col=c("darkorange2","darkorchid4","darkorange2","darkorchid4"))+
+  
+      annotate(geom="text", x = 1.5, y = -2.5, label =bquote('Phasic'), size =12)+
+     annotate(geom="text", x = 4, y = -2.5, label =bquote('Tonic'), size =12)+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2,3.5,4.5), labels=c("Adapt","Exp","Adapt","Exp"), limits=c(0.5, 5)) +
+   ylab("spectral slope") + xlab("night") + 
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/F4/Slope_PT.svg", width=8, height=8, dpi=500)
+```
+
+
+
+# REM density
+```{r}
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/REMs.txt", header=T, sep=",", row.names=NULL)
+
+dataRR=c(data$REMA, data$REME)
+ID     = rep(c(1:16),2)
+N     = rep(1:2,each =16)
+
+dataMatR =data.frame(dataRR,ID,N)
+
+REMD = nparLD(dataRR ~ N, subject = ID, data = dataMatR)
+REMD$ANOVA.test$`p-value`
+REMD$ANOVA.test$Statistic
+
+
+FinalMat = dataMatR
+FinalMat$xj <- jitter(FinalMat$N, amount = 0.05)
+
+dc2 = describe(dataRR~N,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE)) #
+
+f1 <- ggplot(data=FinalMat, aes(y=dataRR)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(N=="1"), aes(x=xj), color = 'grey',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(N=="2"), aes(x=xj), color = 'black', size = 5,
+              alpha = .6) +
+  
+  geom_crossbar(data=dc,aes(x=c( 1,2),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, col=c("grey","black"))+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2), labels=c("BL","EXP"), limits=c(0.6, 2.4)) +
+   ylab("spectral slope") + xlab("condition") + 
+   ggtitle('REM Density') + 
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/SFig5-1/REMDesnity.svg", width=8, height=8, dpi=500)
+
+
+```
+
+
+
+# Coherence beta
+```{r Coherence Beta}
+dataC <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/Coh_Beta_REM_all4s.txt", header=T, sep=",", row.names=NULL)
+
+dataCC = c(dataC$RE,dataC$RA,dataC$NE,dataC$NA.)
+
+ID     = rep(c(1:16),4)
+time   = rep(c(1,2,1,2),each=16)
+Eye     = rep(c(1,2),each = 32)
+dataALL_R = data.frame(dataCC,time,ID, Eye)
+
+
+attach(dataALL_R)
+beta <- ld.f2(y=dataCC, time1=time, time1.name="time" ,time2=Eye, time2.name="eye", subject=ID,description=TRUE)
+beta$ANOVA.test$`p-value`
+
+COH_Beta_diff_R = dataC$RE - dataC$RA
+COH_Beta_diff_N = dataC$NE - dataC$NA.
+
+data_MRMc = data.frame(perf_gain,COH_Beta_diff_N, COH_Beta_diff_R)
+model <- lm(perf_gain ~ COH_Beta_diff_N+COH_Beta_diff_R, data = data_MRMc)
+summary(model)
+
+```
+
+```{r plot coherence}
+
+FinalMat = dataALL_R
+FinalMat$xj <- jitter(FinalMat$Eye, amount = 0.05)
+FinalMat$KB2 <- rep(c(1,2,3,4),each =16)
+
+FinalMat2 = FinalMat
+
+dc2 = describe(dataCC~KB2,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE)) #column 3 is mean row 5 is median
+
+
+cols <- c("A"="darkorange2","E" = "darkorchid4")
+
+
+f1 <- ggplot(data=FinalMat, aes(y=dataCC)) +
+      
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(Eye=="1", time=="1"), aes(x=xj), color = 'darkorange2',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Eye=="1", time=="2"), aes(x=xj+1), color = 'darkorchid4', size = 5,
+              alpha = .6) +
+   
+   geom_point(data = FinalMat %>% filter(Eye=="2", time=="1"), aes(x=xj+1.5), color = 'darkorange2',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(Eye=="2", time=="2"), aes(x=xj+2.5), color = 'darkorchid4', size = 5,
+              alpha = .6) +
+  
+   geom_crossbar(data=dc,aes(x=c( 1,2,3.5,4.5),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.65, size=0.75, 
+                 col=c("darkorange2","darkorchid4","darkorange2","darkorchid4"))+
+  
+      annotate(geom="text", x = 1.5, y = 0.6, label =bquote('Phasic'), size =12)+
+     annotate(geom="text", x = 4, y = 0.6, label =bquote('Tonic'), size =12)+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1,2,3.5,4.5), labels=c("Adapt","Exp","Adapt","Exp"), limits=c(0.5, 5)) +
+   ylab("beta coherence") + xlab("night") + ylim(0.35, 0.65)+
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/F4/Beta_Coh_PT.svg", width=8, height=8, dpi=500)
+```
+
+
+
+
+
+
+# REM Beta Power (ALL REM)
+```{r}
+AG <- c(1:10, 22, 23,24,25,31,32,33)
+SG <- c(11:21, 26,27,28,29,30 )
+
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/REMall_Beta_C.txt", header=T, sep=",", row.names=NULL)
+
+dataSD = c(data$All_E,data$All_A)
+G1     = rep(1:16,2)
+time   = rep(c(2,1),each=16)
+
+dataALL = data.frame(dataSD,G1,time)
+
+attach(dataALL)
+SS <- nparLD(dataSD ~ time, subject=G1, data=  dataALL, description=TRUE)
+SS$ANOVA.test
+
+
+FinalMat = dataALL
+
+FinalMat$xj <- jitter(FinalMat$time, amount = 0.05)
+dc2 = describe(dataSD~time,data=FinalMat) # calculate summary stats also non-param
+dc  = data.frame(matrix(unlist(dc2), nrow = length(dc2), byrow = TRUE))
+
+
+f1 <- ggplot(data=FinalMat, aes(y=dataSD)) +
+   #geom_line(aes(x=xj, group=ID), color = 'lightgray') +
+   #Add geom_() objects
+   geom_point(data = FinalMat %>% filter(time=="1"), aes(x=xj), color = 'darkorange2',  size = 5.,
+              alpha = .6) +
+   geom_point(data = FinalMat %>% filter(time=="2"), aes(x=xj), color = 'darkorchid4', size = 5,
+              alpha = .6) +
+
+
+   geom_crossbar(data=dc,aes(x=c( 1,2),ymin=X3, ymax=X3,y=X3,group=X1), width = 0.35, size=0.75, 
+                 col=c('darkorange2','darkorchid4'))+
+   
+    geom_line(aes(x=xj, group=G1), color = 'lightgray') +
+    #geom_signif(stat="identity", data=data.frame(x=3, xend=4,y=0.085, annotation="*"),
+      #aes(x=x,xend=xend, y=y, yend=y, annotation=annotation, textsize=14), size = 4, color = "black")+
+       
+     #Define additional settings
+   scale_x_continuous(breaks=c( 1.,2), labels=c("adapt","exp"), limits=c(0.8, 2.2)) +
+   ylab("beta power (uv2)") + ylim(0,0.003)+ xlab("night") +
+   ggtitle('REM Beta (13-30Hz)') +
+      theme_classic() + theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"),
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26))  
+f1
+
+ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/FIGURES_CB/Fig5/REM_BETA_POWER.svg", width=8, height=8, dpi=500)
+
+```
+
+
+# Correlations
+```{r }
+data <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/REMSleep_beta.txt", header=T, sep=",", row.names=NULL)
+
+dataR = c(data$R_A,data$R_E,data$N_A,data$N_E)
+
+dataBH <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Perf_gain_all.txt", header=F, sep=",", row.names=NULL)
+
+SG <- c(11:21, 26,27,28,29,30 ) 
+perf_gain = as.numeric(dataBH$V1[SG])
+
+Tonic_diff = data$N_E - data$N_A
+Phasic_diff = data$R_E - data$R_A
+# scatter plot
+my_data <- data.frame(perf_gain, Phasic_diff )
+shapiro.test(Tonic_diff)
+
+ggscatter(my_data, x = "Phasic_diff", y = "perf_gain", 
+          add = "reg.line", conf.int = TRUE, size = 5,
+          cor.coef = TRUE, cor.method = c("kendall"),
+          xlab = "beta power difference", ylab = "performance change")+
+  ggtitle('Phasic REM') + 
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"), 
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/SFig5-1/Corr_phasicBeta_perf.svg", width=8, height=8, dpi=500)
+ 
+ 
+ 
+dataSP <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/Fastspindles_Exp-Adpt_density_central.txt", header=T, sep=",", row.names=NULL)
+
+spindleNREM = dataSP$ALL
+spindleN2 = dataSP$N2
+spindleN3 = dataSP$N3
+
+my_data <- data.frame(perf_gain, spindleNREM )
+shapiro.test(dataSP$ALL)
+
+ggscatter(my_data, x = "spindleNREM", y = "perf_gain", 
+          add = "reg.line", conf.int = TRUE, size = 5,
+          cor.coef = TRUE, cor.method = c("pearson"),
+          xlab = "spindle density difference (N2 & N3)", ylab = "performance change")+
+  ggtitle('Fast spindles (13-15Hz)') + 
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"), 
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figure_panels/Spindle_corr_Perf_N2andN3.svg", width=8, height=8, dpi=500)
+ 
+```
+
+
+
+# COrr Fast spindle and beta change
+```{r}
+dataSP <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/Fastspindles_Exp-Adpt_density_central.txt", header=T, sep=",", row.names=NULL)
+
+dataSP2 <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/Fastspindles_ExpOnly_density_central.txt", header=T, sep=",", row.names=NULL)
+
+
+dataBETA <- read.delim("C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/Files/RvI_beta_C_X.txt", header=T, sep=",", row.names=NULL)
+
+Beta_diff = dataBETA$post[1:16] - dataBETA$pre[1:16]
+  FS_diff   = dataSP2$N2
+
+my_data = data.frame(FS_diff,Beta_diff)
+
+ggscatter(my_data, x = "FS_diff", y = "Beta_diff", 
+          add = "reg.line", conf.int = TRUE, size = 5,
+          cor.coef = TRUE, cor.method = c("pearson"),
+          xlab = "spindle density difference", ylab = "Beta diff (I4 - I3)")+
+  ggtitle('Fast spindles (13-15Hz)') + 
+   theme( axis.line.y=element_line(size = 1), axis.line.x=element_line(size = 1),
+   axis.text.y = element_text(size=32, colour = "black"), axis.text.x = element_text(size=30, colour = "black"), axis.ticks.length=unit(.25, "cm"), axis.ticks = element_line( colour = "black"), 
+   axis.title.x = element_text(size = 32, colour = "black"), axis.title.y = element_text(size = 32, colour = "black"), title = element_text(size=36), legend.title =element_blank(), legend.text=element_text(size=26)) 
+
+ ggsave(file="C:/Users/b1044271/Desktop/Sodium/Projects/Keyboard/EEG/Publication/Figures/FIGURES_CB/SpindleN2_corr_beta.svg", width=8, height=8, dpi=500)
+
+```
